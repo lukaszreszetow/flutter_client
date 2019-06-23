@@ -18,6 +18,9 @@ flutter:
   assets:
   - assets/images/dog.jpeg
   - assets/images/dog_small.jpeg
+  - assets/images/stars.jpg
+  - assets/sounds/big_sound.mp3
+  - assets/sounds/small_sound.wav
   uses-material-design: true
 name: flutter_client
 version: 1.0.0+1

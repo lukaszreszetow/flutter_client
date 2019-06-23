@@ -36,9 +36,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String message;
+  String image;
+  String sound;
   SocketIOManager manager;
   SocketIO socket;
+  String emited;
+  Stopwatch connectionTime;
 
   @override
   void initState() {
@@ -66,11 +69,19 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           RaisedButton(
-            child: const Text('Send to socket'),
+            child: const Text('Send image'),
             color: Theme.of(context).accentColor,
             elevation: 4.0,
             onPressed: () {
-              sendMessage();
+              sendMessage('assets/images/stars.jpg', 'image');
+            },
+          ),
+          RaisedButton(
+            child: const Text('Send sound'),
+            color: Theme.of(context).accentColor,
+            elevation: 4.0,
+            onPressed: () {
+              sendMessage('assets/sounds/small_sound.wav', 'sound');
             },
           ),
           addWidget()
@@ -80,24 +91,29 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   addWidget() {
-    if(message == null) {
+    if (image == null) {
       return Text("no message");
     } else {
-      final bytes = base64Decode(message);
-      print("bytes = $bytes");
+      final bytes = base64Decode(image);
       return Image.memory(bytes);
     }
-
   }
 
   _connectToSocket() async {
     manager = SocketIOManager();
     socket = await manager.createInstance('http://10.0.2.2:1337/');
-    socket.on("message", (data) {
-      print("new message arrived");
-      print("message = $data");
+    socket.on("image", (data) {
+      print('Communication took ${connectionTime.elapsedMilliseconds}');
       setState(() {
-        message = data.toString();
+        image = data.toString();
+        print("Image is the same ${image == emited}");
+      });
+    });
+    socket.on("sound", (data) {
+      print('Communication took ${connectionTime.elapsedMilliseconds}');
+      setState(() {
+        sound = data.toString();
+        print("Sound is the same ${sound == emited}");
       });
     });
     socket.connect();
@@ -107,16 +123,16 @@ class _MyHomePageState extends State<MyHomePage> {
     await manager.clearInstance(socket);
   }
 
-  sendMessage() async {
+  sendMessage(String file, String event) async {
     if (socket != null) {
-      print("sending message");
-      //socket.emit("message", [myController.text]);
-      final imageBytes = await rootBundle.load('assets/images/dog.jpeg');
-      print("imageBytes = $imageBytes");
-      final image = base64Encode(imageBytes.buffer.asUint8List(imageBytes.offsetInBytes, imageBytes.lengthInBytes));
-      print("image = $image");
-      socket.emit("message", [image]);
-      print("Message emitted...");
+      Stopwatch start = Stopwatch()..start();
+      final fileBytes = await rootBundle.load(file);
+      final fileCoded = base64Encode(fileBytes.buffer
+          .asUint8List(fileBytes.offsetInBytes, fileBytes.lengthInBytes));
+      print('Converting took ${start.elapsedMilliseconds}');
+      emited = fileCoded;
+      connectionTime = Stopwatch()..start();
+      socket.emit(event, [fileCoded]);
     }
   }
 
