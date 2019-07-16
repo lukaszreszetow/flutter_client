@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
 import 'package:adhara_socket_io/adhara_socket_io.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform;
 
 void main() async {
   runApp(MyApp());
@@ -109,7 +110,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _connectToSocket() async {
     manager = SocketIOManager();
-    socket = await manager.createInstance(SocketOptions('http://127.0.0.1:1337'));
+    if(Theme.of(context).platform == TargetPlatform.android)
+      socket = await manager.createInstance(SocketOptions('http://10.0.2.2:1337'));
+    else
+      socket = await manager.createInstance(SocketOptions('http://127.0.0.1:1337'));
+
     socket.on("image", (data) {
       print('Communication took ${connectionTime.elapsedMilliseconds}');
       setState(() {
