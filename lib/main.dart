@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'dart:io';
 import 'dart:convert';
 import 'package:adhara_socket_io/adhara_socket_io.dart';
 
@@ -38,6 +37,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String image;
   String sound;
+  String pdf;
   SocketIOManager manager;
   SocketIO socket;
   String emited;
@@ -81,7 +81,15 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Theme.of(context).accentColor,
             elevation: 4.0,
             onPressed: () {
-              sendMessage('assets/sounds/small_sound.wav', 'sound');
+              sendMessage('assets/sounds/big_sound.mp3', 'sound');
+            },
+          ),
+          RaisedButton(
+            child: const Text('Send pdf'),
+            color: Theme.of(context).accentColor,
+            elevation: 4.0,
+            onPressed: () {
+              sendMessage('assets/medium_pdf_file.PDF', 'pdf');
             },
           ),
           addWidget()
@@ -101,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _connectToSocket() async {
     manager = SocketIOManager();
-    socket = await manager.createInstance('http://10.0.2.2:1337/');
+    socket = await manager.createInstance(SocketOptions('http://10.0.2.2:1337/'));
     socket.on("image", (data) {
       print('Communication took ${connectionTime.elapsedMilliseconds}');
       setState(() {
@@ -114,6 +122,13 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         sound = data.toString();
         print("Sound is the same ${sound == emited}");
+      });
+    });
+    socket.on("pdf", (data) {
+      print('Communication took ${connectionTime.elapsedMilliseconds}');
+      setState(() {
+        pdf = data.toString();
+        print("Pdf is the same ${pdf == emited}");
       });
     });
     socket.connect();
