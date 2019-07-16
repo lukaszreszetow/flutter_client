@@ -109,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _connectToSocket() async {
     manager = SocketIOManager();
-    socket = await manager.createInstance(SocketOptions('http://10.0.2.2:1337/'));
+    socket = await manager.createInstance(SocketOptions('http://127.0.0.1:1337'));
     socket.on("image", (data) {
       print('Communication took ${connectionTime.elapsedMilliseconds}');
       setState(() {
