@@ -21,21 +21,21 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: StronaGlowna(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class StronaGlowna extends StatefulWidget {
   final String title;
 
-  MyHomePage({Key key, @required this.title}) : super(key: key);
+  StronaGlowna({Key key, @required this.title}) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _StronaGlownaState createState() => _StronaGlownaState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _StronaGlownaState extends State<StronaGlowna> {
   String image;
   String sound;
   String pdf;
@@ -43,6 +43,8 @@ class _MyHomePageState extends State<MyHomePage> {
   SocketIO socket;
   String emited;
   Stopwatch connectionTime;
+  Stopwatch podlaczanie;
+  final myController = TextEditingController();
 
   @override
   void initState() {
@@ -66,76 +68,70 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Theme.of(context).accentColor,
             elevation: 4.0,
             onPressed: () {
-              _connectToSocket();
+              _podlaczDoSerwera(myController.text);
             },
           ),
           RaisedButton(
-            child: const Text('Send image'),
+            child: const Text('Wyslij obraz'),
             color: Theme.of(context).accentColor,
             elevation: 4.0,
             onPressed: () {
-              sendMessage('assets/images/stars.jpg', 'image');
+              sendMessage('assets/images/stars.jpg', 'obraz');
             },
           ),
           RaisedButton(
-            child: const Text('Send sound'),
+            child: const Text('Wyslij dzwiek'),
             color: Theme.of(context).accentColor,
             elevation: 4.0,
             onPressed: () {
-              sendMessage('assets/sounds/big_sound.mp3', 'sound');
+              sendMessage('assets/sounds/big_sound.mp3', 'dzwiek');
             },
           ),
           RaisedButton(
-            child: const Text('Send pdf'),
+            child: const Text('Wyslij pdf'),
             color: Theme.of(context).accentColor,
             elevation: 4.0,
             onPressed: () {
               sendMessage('assets/medium_pdf_file.PDF', 'pdf');
             },
           ),
-          addWidget()
+          TextField(
+            controller: myController..text = "192.168.1.",
+            decoration: InputDecoration(border: InputBorder.none),
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+          )
         ],
       )),
     );
   }
 
-  addWidget() {
-    if (image == null) {
-      return Text("no message");
-    } else {
-      final bytes = base64Decode(image);
-      return Image.memory(bytes);
-    }
-  }
-
-  _connectToSocket() async {
+  _podlaczDoSerwera(String ip) async {
     manager = SocketIOManager();
-    if(Theme.of(context).platform == TargetPlatform.android)
-      socket = await manager.createInstance(SocketOptions('http://10.0.2.2:1337'));
-    else
-      socket = await manager.createInstance(SocketOptions('http://127.0.0.1:1337'));
 
-    socket.on("image", (data) {
-      print('Communication took ${connectionTime.elapsedMilliseconds}');
+    socket = await manager.createInstance(SocketOptions('http://$ip:1337'));
+
+    socket.on("connect", (data) {
+      print('Polaczenie zajelo ${podlaczanie.elapsedMilliseconds}');
+    });
+    socket.on("obraz", (data) {
+      print('Komunikacja zajela ${connectionTime.elapsedMilliseconds}');
       setState(() {
-        image = data.toString();
-        print("Image is the same ${image == emited}");
+        print("Obraz jest identyczny? ${image == emited}");
       });
     });
-    socket.on("sound", (data) {
-      print('Communication took ${connectionTime.elapsedMilliseconds}');
+    socket.on("dzwiek", (data) {
+      print('Komunikacja zajela ${connectionTime.elapsedMilliseconds}');
       setState(() {
-        sound = data.toString();
-        print("Sound is the same ${sound == emited}");
+        print("Dzwiek jest identyczny? ${sound == emited}");
       });
     });
     socket.on("pdf", (data) {
-      print('Communication took ${connectionTime.elapsedMilliseconds}');
+      print('Komunikacja zajela ${connectionTime.elapsedMilliseconds}');
       setState(() {
-        pdf = data.toString();
-        print("Pdf is the same ${pdf == emited}");
+        print("Pdf jest identyczny? ${pdf == emited}");
       });
     });
+    podlaczanie = Stopwatch()..start();
     socket.connect();
   }
 
@@ -149,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final fileBytes = await rootBundle.load(file);
       final fileCoded = base64Encode(fileBytes.buffer
           .asUint8List(fileBytes.offsetInBytes, fileBytes.lengthInBytes));
-      print('Converting took ${start.elapsedMilliseconds}');
+      print('Konwersja zajela ${start.elapsedMilliseconds}');
       emited = fileCoded;
       connectionTime = Stopwatch()..start();
       socket.emit(event, [fileCoded]);
